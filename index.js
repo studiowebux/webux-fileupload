@@ -18,6 +18,8 @@ const fs = require("fs");
 const path = require("path");
 const sharp = require("sharp");
 const fileUpload = require("express-fileupload");
+const mime = require("mime");
+const imageType = require("image-type");
 
 /**
  * It delete the file pass in parameter.
@@ -76,37 +78,66 @@ const PrepareFile = (options, files, filename, label = "") => {
         return reject(new Error("The label must be a string"));
       }
       if (options.mimeTypes.indexOf(files[options.key].mimetype) > -1) {
+        const extension = mime.getExtension(files[options.key].mimetype);
+
         const realFilename = path.join(
           options.destination,
-          filename + label + options.filetype
+          filename + label + "." + extension
         );
-        const TMPfilename = path.join(
-          options.tmp,
-          filename + label + "_TMP" + options.filetype
-        );
-        files[options.key].mv(TMPfilename, err => {
-          console.log(err);
-          if (err) {
-            return reject(err);
-          }
-          sharp(TMPfilename)
-            .resize(options.size)
-            .png()
-            .toFile(realFilename, async err => {
+
+        if (
+          options.filetype === "image" &&
+          options.mimeTypes.indexOf(imageType(files[options.key].data).mime) >
+            -1
+        ) {
+          if (extension !== "gif") {
+            const TMPfilename = path.join(
+              options.tmp,
+              filename + label + "_TMP" + "." + extension
+            );
+            files[options.key].mv(TMPfilename, err => {
               if (err) {
                 return reject(err);
               }
 
-              // Delete the temporary file
-              await DeleteFile(TMPfilename).catch(e => {
-                return reject(e);
-              });
+              sharp(TMPfilename)
+                .resize(options.size)
+                .toFile(realFilename, async err => {
+                  if (err) {
+                    return reject(err);
+                  }
 
-              console.log(realFilename);
+                  // Delete the temporary file
+                  await DeleteFile(TMPfilename).catch(e => {
+                    return reject(e);
+                  });
 
+                  return resolve(realFilename);
+                });
+            });
+          } else {
+            files[options.key].mv(realFilename, err => {
+              if (err) {
+                return reject(err);
+              }
               return resolve(realFilename);
             });
-        });
+          }
+        } else if (options.filetype === "document") {
+          files[options.key].mv(realFilename, err => {
+            if (err) {
+              return reject(err);
+            }
+            return resolve(realFilename);
+          });
+        } else {
+          files[options.key].mv(realFilename, err => {
+            if (err) {
+              return reject(err);
+            }
+            return resolve(realFilename);
+          });
+        }
       } else {
         return reject(new Error("Invalid mime type"));
       }

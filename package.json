@@ -16,6 +16,8 @@
   "dependencies": {
     "express-fileupload": "^1.1.5",
     "fs": "0.0.1-security",
+    "image-type": "^4.1.0",
+    "mime": "^2.4.4",
     "path": "^0.12.7",
     "sharp": "^0.23.0"
   },
