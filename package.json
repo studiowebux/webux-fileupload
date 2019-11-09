@@ -1,6 +1,6 @@
 {
   "name": "@studiowebux/fileupload",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A wrapper to upload files, currently you can only upload local files using the png filetype",
   "main": "index.js",
   "scripts": {
