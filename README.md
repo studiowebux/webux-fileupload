@@ -6,7 +6,7 @@ Currently you can only upload files locally and in .png format
 ## Installation
 
 ```bash
-npm i --save webux-fileupload
+npm i --save @studiowebux/fileupload
 ```
 
 ## Usage
@@ -59,7 +59,7 @@ const express = require("express");
 const app = express();
 const path = require("path");
 const router = express.Router();
-const { PrepareFile, DeleteFile, fileUploadMiddleware } = require("webux-fileupload");
+const { PrepareFile, DeleteFile, fileUploadMiddleware } = require("@studiowebux/fileupload");
 const options = require("./config/upload");
 
 // action

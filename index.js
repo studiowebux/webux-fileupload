@@ -29,11 +29,6 @@ const imageType = require("image-type");
 const DeleteFile = filepath => {
   return new Promise((resolve, reject) => {
     try {
-      if (typeof filepath !== "string" || !filepath) {
-        return reject(
-          new Error("The file path must be a string and is required")
-        );
-      }
       // Check if the file is present
       fs.stat(filepath, err => {
         if (err) {
@@ -64,19 +59,6 @@ const DeleteFile = filepath => {
 const PrepareFile = (options, files, filename, label = "") => {
   return new Promise((resolve, reject) => {
     try {
-      if (!options || typeof options !== "object") {
-        return reject(
-          new Error("The options parameter is required and must be an object")
-        );
-      }
-      if (!files || typeof files !== "object") {
-        return reject(
-          new Error("The files parameter is required and must be an object")
-        );
-      }
-      if (label && typeof label !== "string") {
-        return reject(new Error("The label must be a string"));
-      }
       if (options.mimeTypes.indexOf(files[options.key].mimetype) > -1) {
         const extension = mime.getExtension(files[options.key].mimetype);
 

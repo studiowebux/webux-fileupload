@@ -101,6 +101,8 @@ router["post"]("/upload", fileUploadMiddleware(options), uploadRoute);
 
 app.use(router);
 
+app.use("/uploads", express.static("uploads"));
+
 app.listen(1337, () => {
   console.log("Server is listening ...");
 });

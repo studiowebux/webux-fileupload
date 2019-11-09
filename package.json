@@ -1,5 +1,5 @@
 {
-  "name": "webux-fileupload",
+  "name": "@studiowebux/fileupload",
   "version": "1.0.1",
   "description": "A wrapper to upload files, currently you can only upload local files using the png filetype",
   "main": "index.js",
@@ -9,7 +9,7 @@
   "homepage": "https://github.com/studiowebux/webux-fileupload",
   "repository": {
     "type": "git",
-    "url": "https://github.com/studiowebux/webux-fileupload.git"
+    "url": "git+https://github.com/studiowebux/webux-fileupload.git"
   },
   "author": "Studio Webux S.E.N.C",
   "license": "SEE LICENSE IN license.txt",
@@ -23,5 +23,11 @@
   },
   "devDependencies": {
     "express": "^4.17.1"
+  },
+  "bugs": {
+    "url": "https://github.com/studiowebux/webux-fileupload/issues"
+  },
+  "directories": {
+    "example": "examples"
   }
 }
