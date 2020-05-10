@@ -61,7 +61,7 @@ export default {
     return {
       showUploadBtn: false,
       dropzoneOptions: {
-        url: "http://127.0.0.1:1337/upload",
+        url: "http://127.0.0.1:1340/upload",
         thumbnailWidth: 150,
         maxFilesize: 256,
         addRemoveLinks: true,

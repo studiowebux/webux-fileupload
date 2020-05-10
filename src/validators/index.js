@@ -1,23 +1,8 @@
-// ██╗  ██╗███████╗██╗     ██████╗ ███████╗██████╗
-// ██║  ██║██╔════╝██║     ██╔══██╗██╔════╝██╔══██╗
-// ███████║█████╗  ██║     ██████╔╝█████╗  ██████╔╝
-// ██╔══██║██╔══╝  ██║     ██╔═══╝ ██╔══╝  ██╔══██╗
-// ██║  ██║███████╗███████╗██║     ███████╗██║  ██║
-// ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝     ╚══════╝╚═╝  ╚═╝
-
-/**
- * File:.js
- * Author: Tommy Gingras
- * Date: 2019-03-07
- * License: All rights reserved Studio Webux S.E.N.C 2015-Present
- */
-
-"use strict";
+// TBD
 
 const fs = require("fs");
 const path = require("path");
 const sharp = require("sharp");
-const fileUpload = require("express-fileupload");
 const mime = require("mime");
 const imageType = require("image-type");
 
@@ -26,16 +11,16 @@ const imageType = require("image-type");
  * @param {String} filepath the full path to the file
  * @returns {Promise} Return a promise
  */
-const DeleteFile = filepath => {
+const DeleteFile = (filepath) => {
   return new Promise((resolve, reject) => {
     try {
       // Check if the file is present
-      fs.stat(filepath, err => {
+      fs.stat(filepath, (err) => {
         if (err) {
           return reject(err);
         }
         // The file is present, delete it.
-        fs.unlink(filepath, err => {
+        fs.unlink(filepath, (err) => {
           if (err) {
             return reject(err);
           }
@@ -77,20 +62,20 @@ const PrepareFile = (options, files, filename, label = "") => {
               options.tmp,
               filename + label + "_TMP" + "." + extension
             );
-            files[options.key].mv(TMPfilename, err => {
+            files[options.key].mv(TMPfilename, (err) => {
               if (err) {
                 return reject(err);
               }
 
               sharp(TMPfilename)
                 .resize(options.size)
-                .toFile(realFilename, async err => {
+                .toFile(realFilename, async (err) => {
                   if (err) {
                     return reject(err);
                   }
 
                   // Delete the temporary file
-                  await DeleteFile(TMPfilename).catch(e => {
+                  await DeleteFile(TMPfilename).catch((e) => {
                     return reject(e);
                   });
 
@@ -98,7 +83,7 @@ const PrepareFile = (options, files, filename, label = "") => {
                 });
             });
           } else {
-            files[options.key].mv(realFilename, err => {
+            files[options.key].mv(realFilename, (err) => {
               if (err) {
                 return reject(err);
               }
@@ -106,14 +91,14 @@ const PrepareFile = (options, files, filename, label = "") => {
             });
           }
         } else if (options.filetype === "document") {
-          files[options.key].mv(realFilename, err => {
+          files[options.key].mv(realFilename, (err) => {
             if (err) {
               return reject(err);
             }
             return resolve(realFilename);
           });
         } else {
-          files[options.key].mv(realFilename, err => {
+          files[options.key].mv(realFilename, (err) => {
             if (err) {
               return reject(err);
             }
@@ -129,13 +114,4 @@ const PrepareFile = (options, files, filename, label = "") => {
   });
 };
 
-/**
- *
- * @param {Object} options The options to configure the fileupload module
- * @returns {Function} the express-fileupload module configured
- */
-function fileUploadMiddleware(options) {
-  return fileUpload(options);
-}
-
-module.exports = { PrepareFile, DeleteFile, fileUploadMiddleware };
+module.exports = { PrepareFile, DeleteFile };
