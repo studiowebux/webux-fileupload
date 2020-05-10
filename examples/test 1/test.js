@@ -17,16 +17,17 @@
 const express = require("express");
 const app = express();
 const path = require("path");
+const cors = require("cors");
 const router = express.Router();
 const {
   PrepareFile,
   DeleteFile,
-  fileUploadMiddleware
+  fileUploadMiddleware,
 } = require("../../index");
 const options = require("./config/upload");
 
 // action
-const download = async someID => {
+const download = async (someID) => {
   // Normally a call to the database to find the picture URL
   // But here we will use a hardcoded value.
   console.log(
@@ -48,7 +49,7 @@ const downloadRoute = async (req, res, next) => {
       return res.status(404).json({ msg: "Image not found !" });
     }
 
-    return res.sendFile(path.resolve(pictureURL), err => {
+    return res.sendFile(path.resolve(pictureURL), (err) => {
       if (err) {
         res.status(422).json({ msg: "Image unprocessable !", error: err });
       }
@@ -82,11 +83,8 @@ const upload = async (someID, filename) => {
 // route
 const uploadRoute = async (req, res, next) => {
   try {
-    const filename = await PrepareFile(
-      options,
-      req.files,
-      req.files.picture.name
-    );
+    console.log(req.files);
+    const filename = await PrepareFile(options, req.files, req.files.file.name);
 
     if (!filename) {
       return res.status(422).json({ msg: "Image not uploaded !" });
@@ -104,11 +102,13 @@ const uploadRoute = async (req, res, next) => {
   }
 };
 
+app.use(cors());
+
 router["get"]("/download/:id", downloadRoute);
 router["post"]("/upload", fileUploadMiddleware(options), uploadRoute);
 
 app.use(router);
 
 app.listen(1337, () => {
-  console.log("Server is listening ...");
+  console.log("Server is listening on port 1337 ...");
 });

@@ -19,9 +19,13 @@
     "image-type": "^4.1.0",
     "mime": "^2.4.4",
     "path": "^0.12.7",
-    "sharp": "^0.23.0"
+    "sharp": "^0.23.0",
+    "socket.io": "^2.3.0",
+    "socket.io-file": "^2.0.31",
+    "socketio-file-upload": "^0.7.0"
   },
   "devDependencies": {
+    "cors": "^2.8.5",
     "express": "^4.17.1"
   },
   "bugs": {
