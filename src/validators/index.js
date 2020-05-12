@@ -1,4 +1,11 @@
-// TBD
+/**
+ * File: index.js
+ * Author: Tommy Gingras
+ * Date: 2020-05-10
+ * License: All rights reserved Studio Webux S.E.N.C 2015-Present
+ */
+
+"use strict";
 
 const fs = require("fs");
 const path = require("path");
@@ -7,111 +14,175 @@ const mime = require("mime");
 const imageType = require("image-type");
 
 /**
- * It delete the file pass in parameter.
- * @param {String} filepath the full path to the file
- * @returns {Promise} Return a promise
+ * It deletes the file pass in parameter.
+ * @param {String} filepath The full path to the file
+ * @returns {Promise} Returns a promise
  */
 const DeleteFile = (filepath) => {
   return new Promise((resolve, reject) => {
-    try {
-      // Check if the file is present
-      fs.stat(filepath, (err) => {
+    // Check if the file is present
+    fs.stat(filepath, (err) => {
+      if (err) {
+        return reject(err);
+      }
+      // The file is present, delete it.
+      fs.unlink(filepath, (err) => {
         if (err) {
           return reject(err);
         }
-        // The file is present, delete it.
-        fs.unlink(filepath, (err) => {
-          if (err) {
-            return reject(err);
-          }
-          // The file has been deleted succesfully.
-          return resolve();
-        });
+        // The file has been deleted succesfully.
+        return resolve();
       });
-    } catch (e) {
-      throw e;
-    }
+    });
   });
 };
 
 /**
- * it checks if the file is valid to beed on the server.
- * @param {Object} options the options object
- * @param {Object} files the files array from the user input
- * @param {String} filename the filename
- * @param {string} label the identifier to be added at the end of the file
+ * It moves a file
+ * @param {Object} file The current file (an object)
+ * @param {String} destination The destination to move the file
+ * @returns {Promise}
  */
-const PrepareFile = (options, files, filename, label = "") => {
+function moveFile(file, destination) {
   return new Promise((resolve, reject) => {
-    try {
-      if (options.mimeTypes.indexOf(files[options.key].mimetype) > -1) {
-        const extension = mime.getExtension(files[options.key].mimetype);
-
-        const realFilename = path.join(
-          options.destination,
-          filename + label + "." + extension
-        );
-
-        if (
-          options.filetype === "image" &&
-          options.mimeTypes.indexOf(imageType(files[options.key].data).mime) >
-            -1
-        ) {
-          if (extension !== "gif") {
-            const TMPfilename = path.join(
-              options.tmp,
-              filename + label + "_TMP" + "." + extension
-            );
-            files[options.key].mv(TMPfilename, (err) => {
-              if (err) {
-                return reject(err);
-              }
-
-              sharp(TMPfilename)
-                .resize(options.size)
-                .toFile(realFilename, async (err) => {
-                  if (err) {
-                    return reject(err);
-                  }
-
-                  // Delete the temporary file
-                  await DeleteFile(TMPfilename).catch((e) => {
-                    return reject(e);
-                  });
-
-                  return resolve(realFilename);
-                });
-            });
-          } else {
-            files[options.key].mv(realFilename, (err) => {
-              if (err) {
-                return reject(err);
-              }
-              return resolve(realFilename);
-            });
-          }
-        } else if (options.filetype === "document") {
-          files[options.key].mv(realFilename, (err) => {
-            if (err) {
-              return reject(err);
-            }
-            return resolve(realFilename);
-          });
-        } else {
-          files[options.key].mv(realFilename, (err) => {
-            if (err) {
-              return reject(err);
-            }
-            return resolve(realFilename);
-          });
-        }
-      } else {
-        return reject(new Error("Invalid mime type"));
+    file.mv(destination, (err) => {
+      if (err) {
+        return reject(err);
       }
-    } catch (e) {
-      throw e;
+      return resolve();
+    });
+  });
+}
+
+/**
+ * Using sharp to process the picture
+ * Currently only the resize is supported for non gif images
+ * @param {Integer} width The picture width
+ * @param {String} filename Temporary filename
+ * @param {String} realFilename Final filename
+ * @returns {Promise<String>} Returns the final filename
+ */
+async function PostProcessing(width, filename, realFilename) {
+  return new Promise((resolve, reject) => {
+    sharp(filename)
+      .resize(width)
+      .toFile(realFilename, async (err) => {
+        if (err) {
+          return reject(err);
+        }
+
+        // Delete the temporary file
+        await DeleteFile(filename).catch((e) => {
+          return reject(e);
+        });
+
+        return resolve(realFilename);
+      });
+  });
+}
+
+/**
+ * To resize images except gif
+ * @param {String} tmpDirectory The absolute path to store the file temporarily
+ * @param {String} filename The uploaded filename
+ * @param {String} extension the file extension
+ * @param {Object|String} file The file to upload (the actual file) or a path to the uploaded file
+ * @param {Integer} width The width of the picture
+ * @param {String} realFilename The final file name (where the file will be stored after processing)
+ * @returns {Promise<String>} the final filename
+ */
+async function ProcessImage(
+  tmpDirectory,
+  filename,
+  extension,
+  file,
+  width,
+  realFilename
+) {
+  // If the image is not a GIF.
+  // We can't resize a gif.
+  if (extension !== "gif") {
+    const TMPfilename = path.join(tmpDirectory, filename);
+
+    if (typeof file === "object") {
+      await moveFile(file, TMPfilename).catch((err) => {
+        return Promise.reject(err);
+      });
+    } else {
+      // Move the file using the filepath
+      fs.renameSync(file, TMPfilename);
+    }
+
+    await PostProcessing(width, TMPfilename, realFilename);
+  } else {
+    // This image is a gif, move it directly
+    if (typeof file === "object") {
+      await moveFile(file, realFilename).catch((err) => {
+        return Promise.reject(err);
+      });
+    } else {
+      // Using the socket.IO implementation
+      // nothing is required. the file is already in the destination directory
+      fs.renameSync(file, realFilename);
+    }
+  }
+  return Promise.resolve(realFilename);
+}
+
+/**
+ * It checks if the file is valid to be stored on the server.
+ * Only used with the express file upload.
+ * @param {Object} options The options object
+ * @param {Object} files The files array from the user input
+ * @param {String} filename The filename
+ * @param {string} label The identifier to be added at the end of the file
+ * @returns {Promise<String>} The filename
+ */
+const UploadFile = (options, files, filename, label = "") => {
+  return new Promise(async (resolve, reject) => {
+    // req.files.KEY
+    const _files = files[options.express.key];
+
+    // Check if the current mimetype is in the options
+    if (options.mimeTypes.indexOf(_files.mimetype) > -1) {
+      const extension = mime.getExtension(_files.mimetype);
+
+      const updatedFilename =
+        (options.sanitizeFilename
+          ? await options.sanitizeFilename(filename)
+          : filename) +
+        label +
+        "." +
+        extension;
+
+      const realFilename = path.join(options.destination, updatedFilename);
+
+      // If the uploaded file is an image
+      // We can use sharp to resize it.
+      if (
+        options.filetype === "image" &&
+        options.mimeTypes.indexOf(imageType(_files.data).mime) > -1
+      ) {
+        await ProcessImage(
+          options.tmp,
+          updatedFilename,
+          extension,
+          _files,
+          options.width,
+          realFilename
+        );
+      } else {
+        // The file is not an image, it can be a document or something else,
+        // Move the file directly
+        await moveFile(_files, realFilename).catch((err) => {
+          return reject(err);
+        });
+      }
+      return resolve(realFilename);
+    } else {
+      return reject(new Error("Invalid mime type"));
     }
   });
 };
 
-module.exports = { PrepareFile, DeleteFile };
+module.exports = { UploadFile, DeleteFile, PostProcessing, ProcessImage };
