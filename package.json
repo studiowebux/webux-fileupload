@@ -1,6 +1,6 @@
 {
   "name": "@studiowebux/fileupload",
-  "version": "1.0.4",
+  "version": "2.0.1",
   "description": "A wrapper to upload files with express and / or socket.IO",
   "main": "src/index.js",
   "scripts": {
@@ -15,10 +15,12 @@
   "license": "SEE LICENSE IN license.txt",
   "dependencies": {
     "express-fileupload": "^1.1.7-alpha.3",
+    "file-type": "^14.3.0",
     "image-type": "^4.1.0",
     "mime": "^2.4.5",
     "read-chunk": "^3.2.0",
     "sharp": "^0.25.2",
+    "socket.io-stream": "^0.9.1",
     "socketio-file-upload": "^0.7.0"
   },
   "devDependencies": {

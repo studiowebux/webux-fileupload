@@ -15,8 +15,6 @@
     "popper.js": "^1.16.1",
     "register-service-worker": "^1.6.2",
     "socket.io-client": "^2.3.0",
-    "socket.io-file": "^2.0.31",
-    "socket.io-file-client": "^2.0.2",
     "socketio-file-upload": "^0.7.0",
     "sockjs": "^0.3.20",
     "vue": "^2.6.11",

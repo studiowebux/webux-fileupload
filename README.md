@@ -7,6 +7,7 @@ This module uses these NPM modules:
 - mime
 - sharp
 - socketio-file-upload
+- socketio-stream
 
 It allows to upload files using the express **Routes** and/or the **Socket.IO** implementation.  
 When images are uploaded, there is some _validations and post processing_ available using the _sharp_ library.
@@ -27,77 +28,81 @@ npm install --save @studiowebux/fileupload
 
 #### Options
 
-The available options are split by upload mode, **express** and **socketIO**
+The available options are split by upload mode, **express**, **socketIO** and **global**
 
 ```javascript
-const opts = {
+let opts = {
+  sanitizeFilename: (filename) => {
+    return Promise.resolve(filename);
+  },
+  destination: path.join(__dirname, "..", "public"),
+  tmp: path.join(__dirname, "..", ".tmp"),
+  mimeTypes: [
+    "image/gif",
+    "image/png",
+    "image/jpeg",
+    "image/bmp",
+    "image/webp",
+  ],
+  width: 200,
+  filetype: "image",
+  label: "-demo",
   express: {
-    destination: path.join(__dirname, "./uploads"),
-    tmp: path.join(__dirname, "./.tmp"),
     limits: {
       fileSize: "1024*1024*10",
     },
-    sanitizeFilename: (filename) => {
-      console.log(filename);
-
-      return Promise.resolve(filename.split("").reverse().join(""));
-    },
     abortOnLimit: true,
     safeFileNames: true,
-    size: 200,
-    mimeTypes: [
-      "image/gif",
-      "image/png",
-      "image/jpeg",
-      "image/bmp",
-      "image/webp",
-    ],
-    filetype: "image",
     key: "file",
   },
   socketIO: {
-    dir: path.join(__dirname, "./uploads"),
     mode: "0666",
     maxFileSize: null,
-    uploadValidator: (event, callback) => {
-      // asynchronous operations allowed here; when done,
-      if (true) {
-        callback(true);
-      } else {
-        callback(false);
-      }
-    },
   },
 };
+
+// This function is used with the socket.IO
+opts.uploadValidator = function (event, callback) {
+  // asynchronous operations allowed here; when done,
+  if (opts.mimeTypes.includes(mime.getType(path.extname(event.file.name)))) {
+    callback(true);
+  } else {
+    callback(false);
+  }
+};
 ```
+
+### Global options
+
+| Option      | Description                                                                          |
+| ----------- | ------------------------------------------------------------------------------------ |
+| destination | The directory to store the uploaded files                                            |
+| tmp         | The directory to store temporarily the files, this is used for post processing steps |
+| width       | the width of images, if specified, the uploaded image will be resize automatically   |
+| mimeTypes   | The allowed mime types                                                               |
+| filetype    | Currently only 'image' and 'document' are handled                                    |
+| label       | a custom label to append to the file name                                            |
 
 ### Express options
 
 > all available options to configure : [express-fileupload](https://www.npmjs.com/package/express-fileupload)
 
-| Option           | Description                                                                             |
-| ---------------- | --------------------------------------------------------------------------------------- |
-| destination      | The directory to store the uploaded files                                               |
-| tmp              | The directory to store temporarily the files, this is used for post processing steps    |
-| limits.filesize  | To specify the limit                                                                    |
-| sanitizeFilename | A function to change the filename                                                       |
-| abortOnLimit     | A boolean to cancel the upload when the limit is exceeded                               |
-| safeFileNames    | A boolean to enable the filename stripping                                              |
-| size             | the width size of images, if specified, the uploaded image will be resize automatically |
-| mimeTypes        | The allowed mime types                                                                  |
-| filetype         | Currently only 'image' and 'document' are handled                                       |
-| key              | The key value to retrieve an uploaded file, it configures the `req.params[key]`         |
+| Option           | Description                                                                     |
+| ---------------- | ------------------------------------------------------------------------------- |
+| limits.filesize  | To specify the limit                                                            |
+| sanitizeFilename | A function to change the filename                                               |
+| abortOnLimit     | A boolean to cancel the upload when the limit is exceeded                       |
+| safeFileNames    | A boolean to enable the filename stripping                                      |
+| key              | The key value to retrieve an uploaded file, it configures the `req.params[key]` |
 
 ### SocketIO options
 
 > all available options to configure : [socketio-file-upload](https://www.npmjs.com/package/socketio-file-upload)
 
-| Option          | Description                               |
-| --------------- | ----------------------------------------- |
-| dir             | The directory to store the uploaded files |
-| mode            | The file mode                             |
-| maxFileSize     | To specify the limit                      |
-| uploadValidator | To validate the file uploaded             |
+| Option      | Description                    |
+| ----------- | ------------------------------ |
+| mode        | The file mode                  |
+| maxFileSize | To specify the file size limit |
 
 ### Functions
 
@@ -157,6 +162,8 @@ io.on("connection", function (socket) {
 // upload namespace
 io.of("upload").on("connection", webuxFileupload.SocketIO());
 ```
+
+> If an error occurs during the post processing the error will be returned on topic : `uploadError`
 
 #### DownloadRoute(downloadFn = null): Function
 

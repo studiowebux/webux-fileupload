@@ -54,6 +54,7 @@ import "vue2-dropzone/dist/vue2Dropzone.min.css";
 import { mapGetters } from "vuex";
 import { socketIOUpload } from "../plugins/socket";
 import SocketIOFileUpload from "socketio-file-upload";
+import ss from "socket.io-stream";
 
 export default {
   name: "Generic",
@@ -109,19 +110,17 @@ export default {
         return;
       }
 
-      console.log("emit : download");
       this.downloadFile(this.filename, this.filename);
     },
     downloadFile(name, originalFilename) {
-      // var deferred = $.Deferred();
       return new Promise((resolve, reject) => {
-        //== Create stream for file to be streamed to and buffer to save chunks
-        var stream = socketIOUpload.createStream(),
-          fileBuffer = [],
-          fileLength = 0;
+        let vm = this;
+        let stream = ss.createStream();
 
-        //== Emit/Request
-        socketIOUpload.emit("download", stream, name, function(
+        let fileBuffer = [],
+          fileLength = 0;
+        console.log("emit : download");
+        ss(socketIOUpload).emit("download", stream, name, function(
           fileInfo,
           fileError
         ) {
@@ -130,21 +129,18 @@ export default {
           } else {
             console.log(["File Found!", fileInfo]);
 
-            //== Receive data
             stream.on("data", function(chunk) {
               fileLength += chunk.length;
               var progress = Math.floor((fileLength / fileInfo.size) * 100);
               progress = Math.max(progress - 2, 1);
-              //deferred.notify(progress);
               console.log(progress);
               fileBuffer.push(chunk);
             });
 
-            stream.on("end", function() {
+            stream.on("end", () => {
               var filedata = new Uint8Array(fileLength),
                 i = 0;
 
-              //== Loop to fill the final array
               fileBuffer.forEach(function(buff) {
                 for (var j = 0; j < buff.length; j++) {
                   filedata[i] = buff[j];
@@ -152,10 +148,7 @@ export default {
                 }
               });
 
-              //deferred.notify(100);
-
-              //== Download file in browser
-              this.downloadFileFromBlob([filedata], originalFilename);
+              vm.downloadFileFromBlob([filedata], originalFilename);
 
               return resolve();
             });
@@ -163,20 +156,18 @@ export default {
         });
       });
     },
-    downloadFileFromBlob() {
+    downloadFileFromBlob(data, fileName) {
       var a = document.createElement("a");
       document.body.appendChild(a);
       a.style = "display: none";
-      return function(data, fileName) {
-        var blob = new Blob(data, {
-            type: "octet/stream"
-          }),
-          url = window.URL.createObjectURL(blob);
-        a.href = url;
-        a.download = fileName;
-        a.click();
-        window.URL.revokeObjectURL(url);
-      };
+      var blob = new Blob(data, {
+          type: "octet/stream"
+        }),
+        url = window.URL.createObjectURL(blob);
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      window.URL.revokeObjectURL(url);
     }
   },
   mounted() {

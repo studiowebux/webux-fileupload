@@ -12,6 +12,7 @@ const path = require("path");
 const sharp = require("sharp");
 const mime = require("mime");
 const imageType = require("image-type");
+const fileType = require("file-type");
 
 /**
  * It deletes the file pass in parameter.
@@ -144,7 +145,7 @@ const UploadFile = (options, files, filename, label = "") => {
     const _files = files[options.express.key];
 
     // Check if the current mimetype is in the options
-    if (options.mimeTypes.indexOf(_files.mimetype) > -1) {
+    if (options.mimeTypes.includes(_files.mimetype)) {
       const extension = mime.getExtension(_files.mimetype);
 
       const updatedFilename =
@@ -161,7 +162,8 @@ const UploadFile = (options, files, filename, label = "") => {
       // We can use sharp to resize it.
       if (
         options.filetype === "image" &&
-        options.mimeTypes.indexOf(imageType(_files.data).mime) > -1
+        imageType(_files.data) &&
+        options.mimeTypes.includes(imageType(_files.data).mime)
       ) {
         await ProcessImage(
           options.tmp,
@@ -172,11 +174,19 @@ const UploadFile = (options, files, filename, label = "") => {
           realFilename
         );
       } else {
-        // The file is not an image, it can be a document or something else,
-        // Move the file directly
-        await moveFile(_files, realFilename).catch((err) => {
-          return reject(err);
-        });
+        const info = await fileType.fromBuffer(_files.data);
+
+        if (!info || !options.mimeTypes.includes(info.mime)) {
+          // await DeleteFile(_files.name);
+
+          return reject(new Error("Invalid mime type"));
+        } else {
+          // The file is not an image, it can be a document or something else,
+          // Move the file directly
+          await moveFile(_files, realFilename).catch((err) => {
+            return reject(err);
+          });
+        }
       }
       return resolve(realFilename);
     } else {

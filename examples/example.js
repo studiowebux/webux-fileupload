@@ -3,18 +3,20 @@ const app = express();
 const socketIO = require("socket.io");
 const path = require("path");
 const cors = require("cors");
+const mime = require("mime");
 
 const WebuxFileupload = require("../src/index");
 
-const opts = {
+let opts = {
   sanitizeFilename: (filename) => {
     console.log(filename);
 
     return Promise.resolve(filename.split("").reverse().join(""));
   },
-  destination: path.join(__dirname, "./uploads"),
+  destination: path.join(__dirname, "./uploads"), // used for both
   tmp: path.join(__dirname, "./.tmp"),
   mimeTypes: [
+    "application/pdf",
     "image/gif",
     "image/png",
     "image/jpeg",
@@ -33,22 +35,18 @@ const opts = {
     key: "file",
   },
   socketIO: {
-    dir: path.join(__dirname, "./uploads"),
     mode: "0666",
     maxFileSize: null,
-    emitChunkFail: false,
-    uploadValidator: (event, callback) => {
-      // asynchronous operations allowed here; when done,
-      if (true) {
-        callback(true);
-      } else {
-        callback(false);
-      }
-    },
-    topicName: "siofu",
-    wrapData: false,
-    exposePrivateFunction: false,
   },
+};
+
+opts.uploadValidator = function (event, callback) {
+  // asynchronous operations allowed here; when done,
+  if (opts.mimeTypes.includes(mime.getType(path.extname(event.file.name)))) {
+    callback(true);
+  } else {
+    callback(false);
+  }
 };
 
 app.use("/public", express.static(opts.destination));

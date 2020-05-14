@@ -24,7 +24,7 @@ class fileupload {
    */
   constructor(opts, log = console) {
     this.config = opts;
-    this.config.socketIO.dir = opts.destination;
+    this.config.socketIO.dir = opts.destination; // use the global destination
 
     this.log = log;
   }
