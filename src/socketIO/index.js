@@ -38,6 +38,7 @@ module.exports = (opts, log = console) => {
 
     // Do something when a file is saved:
     uploader.on("saved", async function (event) {
+      log.debug(`'upload' > Saved`);
       log.debug(event);
 
       const buffer = readChunk.sync(event.file.pathName, 0, 12);
@@ -73,24 +74,25 @@ module.exports = (opts, log = console) => {
 
     // Do something when a file start to upload:
     uploader.on("start", function (event) {
-      log.debug("Start");
-      log.debug(event);
+      log.debug(`'upload' > Start ${event.file.name}`);
+      // log.debug(event);
     });
 
     // Do something when a file is in progress:
     uploader.on("progress", function (event) {
-      log.debug("progress");
-      log.debug(event);
+      log.debug(`'upload' > progress ${event.file.name}`);
+      // log.debug(event);
     });
 
     // Do something when a file is complete:
     uploader.on("complete", function (event) {
+      log.debug(`'upload' > Completed`);
       log.debug(event);
     });
 
     // Error handler:
     uploader.on("error", function (event) {
-      log.debug("Error from uploader", event);
+      log.debug("'upload' > Error from uploader", event);
     });
 
     socket.on("download", function (stream, name, callback) {
