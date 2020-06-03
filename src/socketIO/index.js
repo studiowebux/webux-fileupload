@@ -43,7 +43,9 @@ module.exports = (opts, log = console) => {
     // Simple validation to prevent unwanted file upload,
     // But we also do the validation at the completion
     // and check the file header
-    uploader.uploadValidator = opts.uploadValidator;
+    if (opts.uploadValidator) {
+      uploader.uploadValidator = opts.uploadValidator;
+    }
 
     // Do something when a file is saved:
     uploader.on("saved", function (event) {

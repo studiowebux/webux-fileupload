@@ -39,7 +39,7 @@ let opts = {
     maxFileSize: null,
   },
 };
-
+// Optional upload validtor for Socket.IO
 opts.uploadValidator = function (event, callback) {
   // asynchronous operations allowed here; when done,
   if (opts.mimeTypes.includes(mime.getType(path.extname(event.file.name)))) {

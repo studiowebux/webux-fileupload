@@ -62,6 +62,7 @@ let opts = {
 };
 
 // This function is used with the socket.IO
+// This is optional to configure this validator
 opts.uploadValidator = function (event, callback) {
   // asynchronous operations allowed here; when done,
   if (opts.mimeTypes.includes(mime.getType(path.extname(event.file.name)))) {
@@ -468,6 +469,7 @@ let opts = {
 };
 
 // This function is used with the socket.IO
+// This is optional to configure this validator
 opts.uploadValidator = function (event, callback) {
   // asynchronous operations allowed here; when done,
   if (opts.mimeTypes.includes(mime.getType(path.extname(event.file.name)))) {
