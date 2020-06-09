@@ -15,13 +15,13 @@
   "license": "SEE LICENSE IN license.txt",
   "dependencies": {
     "express-fileupload": "^1.1.7-alpha.3",
-    "file-type": "^14.3.0",
+    "file-type": "^14.6.1",
     "image-type": "^4.1.0",
-    "mime": "^2.4.5",
+    "mime": "^2.4.6",
     "read-chunk": "^3.2.0",
-    "sharp": "^0.25.2",
+    "sharp": "^0.25.3",
     "socket.io-stream": "^0.9.1",
-    "socketio-file-upload": "^0.7.0"
+    "socketio-file-upload": "^0.7.2"
   },
   "devDependencies": {
     "cors": "^2.8.5",
