@@ -13,6 +13,7 @@ const sharp = require("sharp");
 const mime = require("mime");
 const imageType = require("image-type");
 const fileType = require("file-type");
+const ErrorHandler = require("../defaults/errorHandler");
 
 /**
  * It deletes the file pass in parameter.
@@ -156,7 +157,8 @@ const UploadFile = (options, files, filename, label = "") => {
         "." +
         extension;
 
-      const realFilename = path.join(options.destination, updatedFilename);
+      const uploadDestination = path.join(options.destination, updatedFilename);
+      const uploadTempDestination = path.join(options.tmp, updatedFilename);
 
       // If the uploaded file is an image
       // We can use sharp to resize it.
@@ -171,7 +173,7 @@ const UploadFile = (options, files, filename, label = "") => {
           extension,
           _files,
           options.width,
-          realFilename
+          uploadDestination
         );
       } else {
         const info = await fileType.fromBuffer(_files.data);
@@ -179,18 +181,28 @@ const UploadFile = (options, files, filename, label = "") => {
         if (!info || !options.mimeTypes.includes(info.mime)) {
           // await DeleteFile(_files.name);
 
-          return reject(new Error("Invalid mime type"));
+          return reject(
+            ErrorHandler(422, "Invalid Mime Type", {
+              reason: `Received ${info.mime}, not in ${options.mimeTypes}`,
+            })
+          );
         } else {
           // The file is not an image, it can be a document or something else,
-          // Move the file directly
-          await moveFile(_files, realFilename).catch((err) => {
+          // Move the file directly to the temporary file to let the user 
+          // move it in the wanted directory
+          // That way it is possible to apply some post processing on the file
+          await moveFile(_files, uploadTempDestination).catch((err) => {
             return reject(err);
           });
         }
       }
-      return resolve(realFilename);
+      return resolve(uploadTempDestination);
     } else {
-      return reject(new Error("Invalid mime type"));
+      return reject(
+        ErrorHandler(422, "Invalid Mime Type", {
+          reason: `Received ${info.mime}, not in ${options.mimeTypes}`,
+        })
+      );
     }
   });
 };
