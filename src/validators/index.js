@@ -200,7 +200,7 @@ const UploadFile = (options, files, filename, label = "") => {
     } else {
       return reject(
         ErrorHandler(422, "Invalid Mime Type", {
-          reason: `Received ${info.mime}, not in ${options.mimeTypes}`,
+          reason: `Received ${_files.mimetype}, not in ${options.mimeTypes}`,
         })
       );
     }
